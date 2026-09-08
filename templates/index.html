@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adyen Global Demo Store</title>
+    <link rel="stylesheet" href="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/5.61.0/adyen.css" />
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .region-selector { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+        select { padding: 8px; font-size: 16px; border-radius: 4px; }
+        .product-grid { display: flex; gap: 20px; margin-bottom: 20px; }
+        .product-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; flex: 1; text-align: center; }
+        .cart-summary { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        button { background: #0abf53; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #089c43; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #checkout-section { display: none; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+    <h1>Adyen Global Swag Store</h1>
+
+    <div id="store-section">
+        <!-- Region Dropdown -->
+        <div class="region-selector">
+            <label for="region"><strong>Select Shopping Region:</strong></label>
+            <select id="region" onchange="updateCurrencyUI()">
+                <option value="EUR,NL,€">Europe (EUR / NL)</option>
+                <option value="SGD,SG,S$">Singapore (SGD / SG)</option>
+                <option value="AUD,AU,A$">Australia (AUD / AU)</option>
+            </select>
+        </div>
+
+        <h3>Featured Products</h3>
+        <div class="product-grid">
+            <div class="product-card">
+                <h4>Adyen T-Shirt</h4>
+                <p><span class="currency-symbol">€</span>15.00</p>
+                <button onclick="addToCart(1500)">Add to Cart</button>
+            </div>
+            <div class="product-card">
+                <h4>Adyen Hoodie</h4>
+                <p><span class="currency-symbol">€</span>45.00</p>
+                <button onclick="addToCart(4500)">Add to Cart</button>
+            </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary">
+            <h3>Cart Breakdown</h3>
+            <p>Total Items: <span id="cart-count">0</span></p>
+            <p><strong>Total Amount: <span class="currency-symbol">€</span><span id="cart-total">0.00</span></strong></p>
+            <button id="checkout-btn" onclick="startCheckout()" disabled>Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Adyen Drop-in Section -->
+    <div id="checkout-section">
+        <h3>Pay with Adyen</h3>
+        <div id="dropin-container"></div>
+    </div>
+
+    <script src="https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/5.61.0/adyen.js"></script>
+    <script>
+        let currentTotalInMinorUnits = 0;
+
+        function updateCurrencyUI() {
+            // Get the selected currency symbol
+            const regionData = document.getElementById('region').value.split(',');
+            const symbol = regionData[2];
+            
+            // Update all elements with class 'currency-symbol'
+            document.querySelectorAll('.currency-symbol').forEach(el => {
+                el.innerText = symbol;
+            });
+        }
+
+        function addToCart(amountInMinorUnits) {
+            currentTotalInMinorUnits += amountInMinorUnits;
+            document.getElementById('cart-total').innerText = (currentTotalInMinorUnits / 100).toFixed(2);
+            document.getElementById('cart-count').innerText = parseInt(document.getElementById('cart-count').innerText) + 1;
+            document.getElementById('checkout-btn').disabled = false;
+            
+            // Disable region change once cart is started to prevent currency mismatch
+            document.getElementById('region').disabled = true;
+        }
+
+        async function startCheckout() {
+            document.getElementById('store-section').style.display = 'none';
+            document.getElementById('checkout-section').style.display = 'block';
+
+            // Extract selected region data
+            const regionData = document.getElementById('region').value.split(',');
+            const selectedCurrency = regionData[0];
+            const selectedCountry = regionData[1];
+
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        amount: currentTotalInMinorUnits,
+                        currency: selectedCurrency,
+                        countryCode: selectedCountry
+                    })
+                });
+                const sessionData = await response.json();
+
+                const configuration = {
+                    environment: 'test',
+                    clientKey: '{{ client_key }}',
+                    session: {
+                        id: sessionData.id,
+                        sessionData: sessionData.sessionData
+                    },
+                    onPaymentCompleted: (result, component) => {
+                        const successCodes = ['Authorised', 'Received', 'Pending'];
+                        if (successCodes.includes(result.resultCode)) {
+                            window.location.href = '/success';
+                        } else {
+                            window.location.href = '/failed?reason=' + encodeURIComponent(result.resultCode);
+                        }
+                    },
+                    onError: (error, component) => {
+                        window.location.href = '/failed?reason=' + encodeURIComponent(error.message || 'Error');
+                    }
+                };
+
+                const checkout = await AdyenCheckout(configuration);
+                checkout.create('dropin').mount('#dropin-container');
+
+            } catch (error) {
+                console.error("Error creating payment session:", error);
+            }
+        }
+    </script>
+</body>
+</html>

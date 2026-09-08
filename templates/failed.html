@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Failed</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+        .card { border: 1px solid #f5c6cb; background: #f8d7da; color: #721c24; padding: 40px; display: inline-block; border-radius: 8px; }
+        button { margin-top: 20px; padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>✖ Payment Failed</h1>
+        <p>Reason: <strong id="reason"></strong></p>
+        <button onclick="window.location.href='/'">Try Again</button>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        document.getElementById('reason').innerText = urlParams.get('reason') || 'Payment Refused';
+    </script>
+</body>
+</html>

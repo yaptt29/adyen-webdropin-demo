@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Merchant Admin Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #333; }
+        .badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2>Merchant Back-Office Portal</h2>
+            <button onclick="fetchOrders()">🔄 Refresh Orders</button>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Order Reference</th>
+                    <th>Amount</th>
+                    <th>PSP Reference</th>
+                    <th>Transaction Status</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table">
+                <tr><td colspan="4">Loading orders...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchOrders() {
+            try {
+                const response = await fetch('/api/admin/orders');
+                const orders = await response.json();
+                const tbody = document.getElementById('orders-table');
+                
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No orders placed yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = orders.map(o => `
+                    <tr>
+                        <td><strong>${o.reference}</strong></td>
+                        <td>${o.amount} ${o.currency}</td>
+                        <td><code>${o.psp_reference}</code></td>
+                        <td>${o.status}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("Failed to load orders:", err);
+            }
+        }
+
+        // Auto-refresh order list every 3 seconds
+        setInterval(fetchOrders, 3000);
+        fetchOrders();
+    </script>
+</body>
+</html>
