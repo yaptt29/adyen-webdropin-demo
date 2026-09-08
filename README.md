@@ -1,4 +1,5 @@
 Adyen Global Checkout & Admin Dashboard Demo
+
 A lightweight, scalable e-commerce checkout integration built with Flask (Python) and the Adyen Checkout SDK. This project demonstrates end-to-end payment processing using Adyen's Sessions Flow, multi-region dynamic localization, dynamic payment method blocking, real-time admin monitoring, and asynchronous webhook lifecycle handling.
 
 🌟 Key Architectural Features
