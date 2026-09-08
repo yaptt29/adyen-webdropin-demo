@@ -22,10 +22,3 @@ Payment Method Filtering: Demonstrates programmatic risk and business logic usin
 Asynchronous Webhook Event Handling: Event-driven order status updates (Pending Webhook ⏳ ➔ Authorised ✅ / Refused ❌) driven by incoming push notifications.
 
 Merchant Back-Office Portal: Live auto-refreshing dashboard (/admin) to track real-time transaction statuses and pspReference identifiers.
-
-🛠️ Tech Stack
-Backend: Python 3, Flask, adyen-python-api-library, python-dotenv
-
-Frontend: HTML5, Modern JS (ES6+), CSS3, Adyen Checkout Web SDK (v5.61.0)
-
-Data Store: In-memory database (orders_db) simulating an internal Order Management System (OMS)
